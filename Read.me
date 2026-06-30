@@ -1,0 +1,118 @@
+# Automation & Cypress Fundamentals Research & Practice
+
+## Part A: Test Structure
+
+### 1. describe()
+
+- **Purpose:** Groups related test cases together (creates a test suite).
+- **Syntax:** `describe('Suite Name', () => { ... });`
+- **Real-world use case:** Grouping all tests related to the "Login Feature".
+
+### 2. it()
+
+- **Purpose:** Defines an individual, executable test case.
+- **Syntax:** `it('Test Case Name', () => { ... });`
+- **Real-world use case:** Testing if a user sees an error when entering an invalid password.
+
+### 3. before()
+
+- **Purpose:** Runs once before any test cases inside the `describe` block start.
+- **Syntax:** `before(() => { ... });`
+- **Real-world use case:** Seeding a database or clearing state before running a suite.
+
+### 4. beforeEach()
+
+- **Purpose:** Runs before _every individual_ `it()` block in the suite.
+- **Syntax:** `beforeEach(() => { ... });`
+- **Real-world use case:** Navigating to the homepage before starting each test.
+
+### 5. after()
+
+- **Purpose:** Runs once after all test cases in the `describe` block finish.
+- **Syntax:** `after(() => { ... });`
+- **Real-world use case:** Cleaning up test data or logging out of an external system.
+
+### 6. afterEach()
+
+- **Purpose:** Runs after _every individual_ `it()` block finishes.
+- **Syntax:** `afterEach(() => { ... });`
+- **Real-world use case:** Clearing local browser storage or taking a custom state log.
+
+---
+
+## Part B: Assertions
+
+### Difference Between expect() and should()
+
+- **should()** uses **implicit assertions**. It is chained directly to a Cypress command (like `cy.get().should()`). It automatically retries until the element matches the condition or times out.
+- **expect()** uses **explicit assertions**. It does not retry automatically. It is used inside custom functions, loops, or closures when you are interacting with raw JavaScript values or data objects.
+
+### When to use each
+
+- Use `should()` for checking UI elements on the page (visibility, text values, CSS attributes) because it includes automatic waiting.
+- Use `expect()` when verifying API responses, variables, arrays, or text strings extracted manually from elements.
+
+### Examples for should()
+
+1. `cy.get('.success-msg').should('be.visible')`
+2. `cy.get('#submit-btn').should('not.be.disabled')`
+3. `cy.get('.nav-links').should('have.length', 4)`
+
+### Examples for expect()
+
+1. `expect(response.status).to.eq(200)`
+2. `expect(textValue).to.include('Welcome')`
+3. `expect(userObject.isAdmin).to.be.true`
+
+---
+
+## Part D: Locators
+
+### Cypress Locator Methods
+
+- **cy.get()**: Selects elements based on a CSS selector (e.g., `cy.get('#submit-btn')`).
+- **cy.contains()**: Selects an element containing a specific string of text (e.g., `cy.contains('Submit')`).
+- **.find()**: Finds descendant elements of a specific locator (e.g., `cy.get('form').find('input')`).
+- **.children()**: Gets the immediate children of an element.
+- **.parent()**: Gets the immediate parent of an element.
+- **.closest()**: Travels up the DOM tree to find the nearest matching ancestor.
+- **.eq()**: Selects a specific element from a list based on its index (e.g., `.eq(0)` gets the first item).
+- **.first()**: Quick shortcut to get the very first element in a list.
+- **.last()**: Quick shortcut to get the very last element in a list.
+- **.within()**: Scopes all subsequent Cypress commands to remain inside this specific element container.
+
+### Locator Questions & Best Practices
+
+- **Why are IDs preferred?** IDs are unique to a single element on a web page, making your automated tests highly stable and less likely to break when the layout changes.
+- **What are CSS selectors?** Patterns used to select elements based on their HTML tags, classes, IDs, or attributes (e.g., `input[type="text"]`).
+- **What are data attributes (data-cy, data-testid)?** Custom attributes added to HTML elements specifically for testing purposes. They insulate tests from UI design changes or JavaScript refactoring.
+- **Why are long CSS selectors discouraged?** Long, deeply nested selectors (like `div > ul > li > span > button`) are fragile. If a developer changes just one structural layer of the page, the selector breaks and your test fails.
+
+---
+
+## Part G: Waiting
+
+- **Why is cy.wait(5000) considered bad practice?** It introduces arbitrary, hardcoded delays. If an action takes 1 second, the test wastes 4 seconds waiting. Over hundreds of tests, this dramatically increases build times.
+- **What is a better alternative?** Rely on Cypress's built-in automatic waiting/retry-ability, modify the timing threshold configuration globally or inline via `cy.get('#element', { timeout: 10000 })`, or intercept and wait for network calls using `cy.intercept()` and `cy.wait('@alias')`.
+
+---
+
+## Part J: Handling New Tabs and Browser Dialogs
+
+- **Open a new tab:** Cypress does not support multiple browser tabs simultaneously. To test clicking a link that opens in a new tab, you remove the `target="_blank"` attribute from the HTML element using jQuery commands before clicking it: `cy.get('a').invoke('removeAttr', 'target').click();`. This forces the link to load inside the same browser window.
+- **Alerts and Prompts:** Cypress automatically clicks "OK" on JavaScript browser alerts and confirmations. You write listener bindings like `cy.on('window:alert')` or `cy.on('window:confirm')` to capture the text and run assertions against it.
+
+---
+
+## Part M: File Upload Limitations
+
+- **Why Cypress could not upload files by default:** Early browser execution environments isolated standard file system interactions due to browser sandbox security policies.
+- **Modern approach:** Modern Cypress releases natively support file automation using the `.selectFile()` command, removing the old dependency on third-party libraries like `cypress-file-upload`.
+
+---
+
+## Reflection
+
+Understanding the core Cypress syntax like `cy.visit()` and `cy.get()` was straightforward due to their clear semantic naming. The implicit assertion waiting engine in `should()` also simplified standard visibility checks.
+
+The primary challenge involved tracking execution context across rapid application navigation steps. Overcoming the initial page routing mismatches emphasized the necessity of targeting explicit sub-pages rather than relying on global site states. This foundational exercise highlights how critical resilient, element-specific selectors are when engineering robust web automation test runners.
